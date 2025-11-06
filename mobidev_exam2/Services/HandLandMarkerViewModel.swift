@@ -426,6 +426,7 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
 
 // MARK: - Delegate
 extension HandLandmarkerViewModel: HandLandmarkerServiceLiveStreamDelegate {
+    //15 input: handlandmarkerresult -> campo landmakars usati per registration e prediction
     func didDetectHands(_ result: HandLandmarkerResult) {
         let now = CACurrentMediaTime()
         let elapsed = (now - startTime) * 1000.0
