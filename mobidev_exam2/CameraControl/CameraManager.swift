@@ -76,7 +76,7 @@ extension CameraManager: CameraFeedServiceDelegate {
                 let height = CVPixelBufferGetHeight(pixelBuffer)
                 DispatchQueue.main.async {
                     self.lastFrameSize = CGSize(width: width, height: height)
-                    self.lastSampleBuffer = sampleBuffer
+                    self.lastSampleBuffer = sampleBuffer //qui CameraView.onReceive osserva questa property
                     self.currentOrientation = orientation
                 }
             }
