@@ -20,13 +20,17 @@ class CameraManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
+        //inizializzo CameraFeedService
         service.delegate = self
     }
-
+    //3
     func start() {
+        //chiano per i permessi
         checkCameraPermission { [weak self] granted in
             guard let self = self else { return }
             if granted {
+                //5
+                //CameraFeedService
                 self.service.startSession()
                 self.session = self.service.session
             } else {
@@ -45,7 +49,9 @@ class CameraManager: NSObject, ObservableObject {
         isUsingFrontCamera = (cameraPosition == .front)
     }
 
+    //4
     private func checkCameraPermission(completion: @escaping (Bool) -> Void) {
+        //Accedo allo stato dell'autorizzazione per la camera
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized: completion(true)
         case .notDetermined:
@@ -61,10 +67,9 @@ class CameraManager: NSObject, ObservableObject {
 
 // MARK: - CameraFeedServiceDelegate
 extension CameraManager: CameraFeedServiceDelegate {
-    
+    //10
     func didOutput(sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
-        //guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        //handService?.detect(pixelBuffer: pixelBuffer)
+        //riceve frame catturati e li pubblica
         DispatchQueue.main.async {
             if let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
                 let width = CVPixelBufferGetWidth(pixelBuffer)
