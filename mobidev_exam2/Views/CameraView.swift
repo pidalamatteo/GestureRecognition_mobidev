@@ -135,13 +135,6 @@ struct CameraView: View {
                                         EmptyView()
                                     }
                                 }
-                                /*
-                                .transition(
-                                    .asymmetric(
-                                        insertion: .opacity.combined(with: .scale(scale: 0.95)),
-                                        removal: .opacity
-                                    )
-                                )*/
                                 .id(selectedTab)
                             }
                             .padding(.bottom, 70)
@@ -177,18 +170,21 @@ struct CameraView: View {
                 .animation(.easeInOut(duration: 0.3), value: selectedTab)
             }
         }
+        //2
         .onAppear {
             cameraManager.start()
         }
         .onDisappear { cameraManager.stop() }
         .onReceive(cameraManager.$lastSampleBuffer) { sampleBuffer in
+            //11 
             guard let sampleBuffer = sampleBuffer else { return }
             guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
             
             let width = CVPixelBufferGetWidth(pixelBuffer)
             let height = CVPixelBufferGetHeight(pixelBuffer)
+            //imposto le dimensioni a hlvm
             handLandmarkerVM.currentImageSize = CGSize(width: width, height: height)
-
+            //viene chiamato process frame
             handLandmarkerVM.processFrame(sampleBuffer, orientation: .up)
         }
     }
@@ -213,7 +209,6 @@ struct CameraView: View {
     // Funzione per caricare le metriche
     private func loadMetrics() {
         print("Caricamento metriche...")
-        // Aggiungi qui la logica specifica per caricare le metriche
     }
 }
 
