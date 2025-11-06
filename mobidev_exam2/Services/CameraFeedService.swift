@@ -32,7 +32,9 @@ class CameraFeedService: NSObject {
     //6
     func startSession() {
         sessionQueue.async {
+            //configura la sessione se non è configurata
             self.configureSession(to: self.cameraPosition)
+            //8 avvia la sessione
             self.captureSession.startRunning()
         }
     }
