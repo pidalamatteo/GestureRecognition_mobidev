@@ -149,8 +149,10 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
     }
     
     // MARK: - Processamento frame
+    //12
     func processFrame(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
         startTime = CACurrentMediaTime()
+        //avvisa il delegate con il frame catturato
         handLandmarkerService?.detectAsync(sampleBuffer: sampleBuffer, orientation: orientation)
     }
     
