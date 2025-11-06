@@ -9,6 +9,7 @@
 import AVFoundation
 import UIKit
 
+//sottoscrive -> cameraManager
 protocol CameraFeedServiceDelegate: AnyObject {
     func didOutput(sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation)
     func sessionWasInterrupted()
@@ -28,6 +29,7 @@ class CameraFeedService: NSObject {
 
     private var videoOutput: AVCaptureVideoDataOutput?
 
+    //6
     func startSession() {
         sessionQueue.async {
             self.configureSession(to: self.cameraPosition)
@@ -44,14 +46,14 @@ class CameraFeedService: NSObject {
     }
     
     
-
+    //7 Configura la session e le impostazioni della camera
     private func configureSession(to cameraPosition: AVCaptureDevice.Position) {
         guard captureSession.inputs.isEmpty else { return }
 
         captureSession.beginConfiguration()
         captureSession.sessionPreset = .high
 
-        // Input: fotocamera posteriore
+        // Input: fotocamera posteriore - collego la camera alla sessione
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                    for: .video,
                                                    position: cameraPosition),
@@ -63,10 +65,11 @@ class CameraFeedService: NSObject {
         }
         captureSession.addInput(input)
 
-        // Output
+        // Output - collego output video alla sessione
         let output = AVCaptureVideoDataOutput()
         output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String:
                                     kCVPixelFormatType_32BGRA]
+        //ogni frame catturato -> captureOutput
         output.setSampleBufferDelegate(self, queue: DispatchQueue(label: "VideoOutputQueue"))
         guard captureSession.canAddOutput(output) else {
             print("Errore: impossibile aggiungere output")
@@ -96,30 +99,19 @@ class CameraFeedService: NSObject {
             self.captureSession.commitConfiguration()
         }
     }
-     
-    /*
-    func imageOrientation(from deviceOrientation: UIDeviceOrientation) -> UIImage.Orientation {
-        switch deviceOrientation {
-        case .portrait: return .right
-        case .portraitUpsideDown: return .left
-        case .landscapeLeft: return .up
-        case .landscapeRight: return .down
-        default: return .up
-        }
-    }
-    func imageOrientation(fromRotationAngle angle: Int32) -> UIImage.Orientation {
-        switch angle {
-        case 0: return .right           // Portrait
-        case 90: return .down           // Landscape Left
-        case 180: return .left          // Portrait Upside Down
-        case 270: return .up            // Landscape Right
-        default: return .up
-        }
-    }
-     */
 }
 
 extension CameraFeedService: AVCaptureVideoDataOutputSampleBufferDelegate {
+    //9 chiamato in automatico
+    func captureOutput(_ output: AVCaptureOutput,
+                       didOutput sampleBuffer: CMSampleBuffer,
+                       from connection: AVCaptureConnection) {
+    
+        let orientation = currentOrientation(for: cameraPosition)
+        //avvisa il delegate -> cameraManager
+        delegate?.didOutput(sampleBuffer: sampleBuffer, orientation: orientation)
+    }
+    
     func currentOrientation(for position: AVCaptureDevice.Position) -> UIImage.Orientation{
         switch UIDevice.current.orientation {
         case .portrait: return position == .front ? .leftMirrored: .right
@@ -129,13 +121,5 @@ extension CameraFeedService: AVCaptureVideoDataOutputSampleBufferDelegate {
         default: return .up
         }
     }
-    func captureOutput(_ output: AVCaptureOutput,
-                       didOutput sampleBuffer: CMSampleBuffer,
-                       from connection: AVCaptureConnection) {
-    
-        let orientation = currentOrientation(for: cameraPosition)
-        delegate?.didOutput(sampleBuffer: sampleBuffer, orientation: orientation)
-    }
-
 }
 
