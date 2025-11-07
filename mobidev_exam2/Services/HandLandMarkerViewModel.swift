@@ -86,11 +86,11 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
     // MARK: - Inizializzazione
     override init() {
         super.init()
-        setupLandmarker()
-        loadSamples()
-        loadModelMetrics()
+        setupLandmarker() //inizializzazione modello mediapipe
+        loadSamples() //campioni salvati
+        loadModelMetrics() //carica metriche
         LandmarkUtils.debugFileLocations()
-        loadFeatureIndices()
+        loadFeatureIndices() //carica indici delle feature selezionate
         
         // Esegui test di consistenza dopo un breve delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -98,7 +98,7 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Setup Landmarker
+    // MARK: - Setup Landmarker - configura il servizio mediapipe per il rilevamento mani irl
     private func setupLandmarker() {
         guard let modelPath = config.modelPath else {
             fatalError("Modello hand_landmarker.task non trovato nel bundle")
@@ -132,7 +132,7 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
         print("Indici delle feature selezionate caricati")
     }
     
-    // MARK: - Aggiornamento opzioni
+    // MARK: - Aggiornamento parametri del servizio di rilevamento mani quando le imp cambiano
     func updateOptions() {
         guard let modelPath = config.modelPath else { return }
         
@@ -148,7 +148,7 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
         print("HandLandmarker aggiornato: numHands=\(config.numHands), minDetection=\(config.minHandDetectionConfidence)")
     }
     
-    // MARK: - Processamento frame
+    // MARK: - Elaborazione frame video
     //12
     func processFrame(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
         startTime = CACurrentMediaTime()
@@ -186,7 +186,8 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
         }
         printRecordedSamples()
     }
-    
+
+    //stampa a console campioni con etichette
     func printRecordedSamples() {
         print("--- Gesti registrati ---")
         for (index, sample) in getSamples().enumerated() {
@@ -195,7 +196,8 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
         print("Totale campioni registrati: \(getSamples().count)")
     }
     
-    // MARK: - Metodi Thread-Safe per recordedSamples
+    // MARK: - Metodi Thread-Safe per recordedSamples per gesutre.json
+    //aggiunge un nuovo sample al buffer interno 
     private func addSample(_ sample: LandmarkSample) {
         samplesQueue.async(flags: .barrier) {
             self.internalRecordedSamples.append(sample)
@@ -204,13 +206,13 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
             }
         }
     }
-    
+    //restituisce una copia thread safe dei campioni registrati
     func getSamples() -> [LandmarkSample] {
         return samplesQueue.sync {
             return self.internalRecordedSamples
         }
     }
-    
+    //elimina tutti i campioni memorizzati
     private func clearSamples() {
         samplesQueue.async(flags: .barrier) {
             self.internalRecordedSamples.removeAll()
@@ -219,7 +221,7 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
             }
         }
     }
-    
+    //salva tutti i campioni registrati su file json
     private func saveSamplesToFile() {
         do {
             let data = try JSONEncoder().encode(self.recordedSamples)
@@ -426,7 +428,7 @@ class HandLandmarkerViewModel: NSObject, ObservableObject {
 
 // MARK: - Delegate
 extension HandLandmarkerViewModel: HandLandmarkerServiceLiveStreamDelegate {
-    //DID DETECT HANDS
+    //DID DETECT HANDS - callback di mediapipe
     //15 input: handlandmarkerresult -> campo landmakars usati per registration e prediction
     func didDetectHands(_ result: HandLandmarkerResult) {
         let now = CACurrentMediaTime()
@@ -514,6 +516,7 @@ extension HandLandmarkerViewModel: HandLandmarkerServiceLiveStreamDelegate {
             }
         }
     }
+    //Esegue predizione con il modello ML
     private func handleSingleHandPrediction(points: [LandmarkPoint]) {
         let features = LandmarkUtils.prepareForPrediction(from: points)
         
